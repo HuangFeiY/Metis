@@ -28,6 +28,7 @@ def padPunctuations(shortString: str):
     return shortString
 
 
+
 def tokenizer(input: str):
     inputWithPunctuationsPaddedWithSpace = padPunctuations(input)
     tokens = inputWithPunctuationsPaddedWithSpace.split(' ')
@@ -122,6 +123,7 @@ def executor(tokens, startState, finalStates,
     return True
 
 
+# 从RE得到NFA
 class NFAFromRegex:
     """
     class for building e-nfa from regular expressions
@@ -132,6 +134,7 @@ class NFAFromRegex:
     #: 存放子自动机的栈
     automata: List[Automata] = []
 
+    # 记录正则表达式的各类特殊符号
     starOperator = '*'
     plusOperator = '+'
     questionOperator = '?'
@@ -169,6 +172,7 @@ class NFAFromRegex:
         #     ruleTokens = reverse_regex(ruleTokens)
 
         index = 0
+        # 这里的ruleTokens像是指代一条正则表达式
         while index < len(ruleTokens):
             token = ruleTokens[index]
             if token not in self.allOperators:

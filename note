@@ -1,0 +1,13 @@
+对于snort dataset，原始代码中包括：
+    snort_dataset = ['activex', 'attack_response', 'botcc.portgrouped', 'botcc', 'chat', 'ciarmy', 'compromised',
+                     'current_events', 'deleted', 'exploit', 'ftp', 'games', 'icmp', 'icmp_info',
+                     'imap', 'inappropriate', 'info', 'malware', 'misc',
+                     'mobile_malware', 'netbios', 'p2p', 'policy', 'pop3', 'rpc', 'scada', 'scan', 'shellcode', 'smtp',
+                     'snmp', 'sql', 'telnet', 'tftp', 'tor', 'trojan', 'user_agents', 'voip', 'web_client',
+                     'web_server', 'web_specific_apps', 'worm']
+
+然而，我再从官网下载下来的规则集中，无法对应里面差不多一半的类别
+
+
+
+非常难以复现，一方面，论文使用的11类，在snort规则层面上就找不齐

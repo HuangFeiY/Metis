@@ -25,8 +25,10 @@ class SnortIntentDataset(Dataset):
 class SnortIntentBatchDataset(Dataset):
 
     def __init__(self, query, lengths, intent, shots=None):
+        # intent相当于标签
         assert len(query) == len(intent)
         if (not shots) or (shots > len(query)):
+            # query是什么，参见train_brnn.py的第289行
             self.dataset = query
             self.intent = intent
             self.lengths = lengths

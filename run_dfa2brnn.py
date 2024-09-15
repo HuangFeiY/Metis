@@ -93,6 +93,7 @@ if __name__ == '__main__':
     for seed in seeds:
         # assert seed in [0, 1, 2, 3]
         set_seed(seed)
+        # 这里是其他的baseline
         if args.model_type in ['MarryUp', 'KnowledgeDistill', 'PR']:
             assert args.rnn in ['RNN', 'LSTM', 'GRU', 'DAN', 'CNN']
             assert args.marryup_type in ['input', 'output', 'all', 'none']
@@ -109,6 +110,7 @@ if __name__ == '__main__':
             results[seed] = [acc_dev_init, acc_test_init, best_dev_acc, best_dev_test_acc, best_dev_test_p,
                              best_dev_test_r, ]
             loggers[seed] = logger_res
+        # 从这里开始才是BRNN
         elif args.model_type == 'Onehot':
             automata_path_forward = os.path.dirname(
                 __file__) + '/data/snort/{}/automata/all.pkl'.format(args.dataset)

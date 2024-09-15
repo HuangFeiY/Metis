@@ -21,6 +21,10 @@ class BRNNIntegrateOnehot(nn.Module):
         V, S, S = fsa_tensor.shape
         self.S = S
         self.h0 = self.hidden_init()  # S hidden state dim should be equal to the state dim
+        
+        #nn.Parameter: 是 PyTorch 中的一个类，用于标记张量是模型的一个参数。
+        # nn.Parameter 会自动将其注册到模型的参数列表中，这样在调用优化器进行训练时，这些参数会被优化器管理和更新。
+        # 那么状态转移矩阵，将作为模型参数的一部分，会随着模型训练而发生变化！
         self.fsa_tensor = nn.Parameter(torch.from_numpy(fsa_tensor).float(), requires_grad=True)  # V x S x S
 
     def forward(self, input, lengths):
@@ -37,19 +41,26 @@ class BRNNIntegrateOnehot(nn.Module):
         :return all hidden state B x L x S:
         """
 
+        # 想要探究input是什么，B和L这两个维度数分别代表什么意思，见此代码文件110行
+        # L相当于Length，B相当于Batch size，一个样本对应的是一个正则表达式。注意：每个样本的L应该是一样的，因为经过pad操作
         B, L = input.size()  # B x L
         hidden = self.h0.unsqueeze(0).repeat(B, 1)  # B x S
+        # 对于一个长度为L的样本，应该有L个隐藏层向量，每个隐藏层向量有S维，一个Batch有B个样本，所以是B x L x S
         all_hidden = torch.zeros((B, L, self.S)).cuda() if self.is_cuda else torch.zeros((B, L, self.S))
 
         for i in range(L):
             inp = input[:, i]  # B
+            # fsa_tensor的大小是V x S x S， B < V
             Tr = self.fsa_tensor[inp]  # B x S x S
+            # 爱因斯坦求和约定 ，这里相当于矩阵乘法
+            # L个隐藏层向量的迭代
             hidden = torch.einsum('bs,bsj->bj', hidden, Tr)  # B x R, B x R -> B x R
             all_hidden[:, i, :] = hidden
 
         return all_hidden
 
     def maxmul(self, hidden, transition):
+        # 对隐藏层向量进行广播乘法
         temp = torch.einsum('bs,bsj->bsj', hidden, transition)
         max_val, _ = torch.max(temp, dim=1)
         return max_val
@@ -89,12 +100,15 @@ class BRNNIntegrateOnehot(nn.Module):
 class IntentIntegrateOnehot(nn.Module):
     def __init__(self, fsa_tensor, config=None,
                  mat=None, bias=None, is_cuda=True):
+        # 直接写super(nn.Module) 是不正确的，因为 super() 的第一个参数应该是当前类，而不是父类。这样，Python 会沿着从当前类开始的继承链向上寻找合适的父类。
         super(IntentIntegrateOnehot, self).__init__()
 
         self.fsa_rnn = BRNNIntegrateOnehot(fsa_tensor, is_cuda)
         self.mat = nn.Parameter(torch.from_numpy(mat).float(), requires_grad=bool(config.train_linear))
         self.bias = nn.Parameter(torch.from_numpy(bias).float(), requires_grad=bool(config.train_linear))
+        # 默认为0
         self.clamp_score = bool(config.clamp_score)
+        # 默认为0
         self.clamp_hidden = bool(config.clamp_hidden)
         self.wfa_type = config.wfa_type
 
@@ -102,6 +116,8 @@ class IntentIntegrateOnehot(nn.Module):
         if self.wfa_type == 'viterbi':
             out = self.fsa_rnn.viterbi(input, lengths)
         else:
+            # input是什么，参见train_brnn.py的第374行
+            # out相当于是all_hidden，即每个时间步的隐藏层向量
             out = self.fsa_rnn.forward(input, lengths)
 
         B, L = input.size()

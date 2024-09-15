@@ -6,9 +6,9 @@ import numpy as np
 
 def process_snort(file_name):
     # print(os.path.abspath(__file__))
-    file_path = os.path.dirname(__file__) + "/data/snort/rules/emerging-{}.rules".format(file_name)
-    output_path = os.path.dirname(__file__) + "/data/snort/rules/emerging-{}.txt".format(file_name)
-    content_rule_path = os.path.dirname(__file__) + "/data/snort/rules/emerging-content-{}.txt".format(file_name)
+    file_path = os.path.dirname(__file__) + "../data/snort/rules/emerging-{}.rules".format(file_name)
+    output_path = os.path.dirname(__file__) + "../data/snort/rules/emerging-{}.txt".format(file_name)
+    content_rule_path = os.path.dirname(__file__) + "../data/snort/rules/emerging-content-{}.txt".format(file_name)
 
     content_rule = []
     contents = []
@@ -17,9 +17,9 @@ def process_snort(file_name):
     with open(file_path, "r") as f:
 
         for line in f:
-            content = re.search(r'content:"[^"]*";', line)
+            content = re.search(r'content:"[^"]*"', line)
             if content != None:
-                content = content.group()[9:-2]
+                content = content.group()[9:-1]
                 if any(content == s for s in contents) or len(content) < 2:
                     continue
 
@@ -29,6 +29,7 @@ def process_snort(file_name):
                 channelFlag = False
                 rule = ['$', '*']
                 i = 0
+                # 这里似乎并没有完全按论文里面写的进行转换
                 while i < len(content):
                     if content[i] != '|':
                         if channelFlag == False:
@@ -70,12 +71,13 @@ def process_snort(file_name):
 
 
 if __name__ == "__main__":
-    snort_dataset = ['activex', 'attack_response', 'botcc.portgrouped', 'botcc', 'chat', 'ciarmy', 'compromised',
-                     'current_events', 'deleted', 'exploit', 'ftp', 'games', 'icmp', 'icmp_info',
-                     'imap', 'inappropriate', 'info', 'malware', 'misc',
-                     'mobile_malware', 'netbios', 'p2p', 'policy', 'pop3', 'rpc', 'scada', 'scan', 'shellcode', 'smtp',
-                     'snmp', 'sql', 'telnet', 'tftp', 'tor', 'trojan', 'user_agents', 'voip', 'web_client',
-                     'web_server', 'web_specific_apps', 'worm']
+    # snort_dataset = ['activex', 'attack_response', 'botcc.portgrouped', 'botcc', 'chat', 'ciarmy', 'compromised',
+    #                  'current_events', 'deleted', 'exploit', 'ftp', 'games', 'icmp', 'icmp_info',
+    #                  'imap', 'inappropriate', 'info', 'malware', 'misc',
+    #                  'mobile_malware', 'netbios', 'p2p', 'policy', 'pop3', 'rpc', 'scada', 'scan', 'shellcode', 'smtp',
+    #                  'snmp', 'sql', 'telnet', 'tftp', 'tor', 'trojan', 'user_agents', 'voip', 'web_client',
+    #                  'web_server', 'web_specific_apps', 'worm']
+    snort_dataset = ['backdoor','dns','ftp','p2p','scan','tftp']
     # snort_dataset = ['games']
     for snort in snort_dataset:
         process_snort(snort)

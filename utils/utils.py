@@ -30,14 +30,16 @@ def pad_dataset(query, config, pad_idx):
     new_query_inverse = []
     for q in query:
         length = len(q)
+        # 反正列表
         q_inverse = q[::-1]
-
+        # seq_max_len默认为50
         if length > config.seq_max_len:
             q = q[: config.seq_max_len]
             q_inverse = q_inverse[: config.seq_max_len]
             length = config.seq_max_len
         else:
             remain = config.seq_max_len - length
+            #类似于填0补充
             remain_arr = np.repeat(pad_idx, remain)
             q = np.concatenate((q, remain_arr))
             q_inverse = np.concatenate((q_inverse, remain_arr))

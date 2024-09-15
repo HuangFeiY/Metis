@@ -7,7 +7,7 @@ import pickle
 
 import shutil
 
-
+# 将输入字符串中的字符以两位一组，转换为带有 '0x' 前缀的十六进制字节
 def HandleBytes(b: str):
     b = b[2:]
     output = []
@@ -53,6 +53,7 @@ def create_vocabs(iterable, mode):
 
 
 def load_snort_dataset(args):
+    # 原来的csv文件是怎么出来的？
     file_path = os.path.dirname(__file__) + "/data/snort/{}/{}.csv".format(args.dataset, args.dataset)
     df = pd.read_csv(file_path, header=None).reset_index(drop=True).rename({'0': 'class', '1': 'text'}, axis='columns')
     df.columns = ["class", "text"]
@@ -67,6 +68,7 @@ def load_snort_dataset(args):
     df_train['mode'] = 'train'
 
     df = pd.concat([df_test, df_train, df_val], ignore_index=True)
+    # map(function, iterable, ...) 返回一个生成器对象，课转化为列表或者元组
     indexToWord, wordToIndex = get_word_to_index(map(lambda text: HandleBytes(text), list(df['text'])))
 
     # print(list(df['text']))
@@ -101,6 +103,11 @@ def load_snort_dataset(args):
 #     }
 
 def create_classification_dataset(args):
+    # #返回的res为： {
+    #     'data': df,
+    #     'indexToWord': indexToWord,
+    #     'wordToIndex': wordToIndex
+    # }，其中df是=pd.concat([df_test, df_train, df_val], ignore_index=True)
     res = load_snort_dataset(args)
 
     print('CREATING VOCAB FILES')
@@ -109,6 +116,9 @@ def create_classification_dataset(args):
     texts = list(data['text'])
     # print(texts)
     # texts = [['BOS'] + i.strip().split() + ['EOS'] for i in texts]
+    
+    #函数头 def create_vocabs(iterable, mode):
+    # 第一个参数输入为labels？这是想干啥？
     i2in, in2i = create_vocabs(labels, 'labels')
     in2i[1] = 1
     in2i[0] = 0
@@ -117,6 +127,7 @@ def create_classification_dataset(args):
     i2t, t2i = res['indexToWord'], res['wordToIndex']
 
     print('TRANSFORMING TO INDEX')
+    # 按train, test, val区分开来了
     data = data.groupby('mode')
     train, dev, test = data.get_group('train'), data.get_group('valid'), data.get_group('test')
 
@@ -165,10 +176,10 @@ def load_classification_dataset(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default=snort, help="dataset name")
+    parser.add_argument('--dataset', type=str, default='snort', help="dataset name")
     parser.add_argument('--test_split', type=float, default=0.2, help="spilt rate of test set")
     parser.add_argument('--val_split', type=float, default=0.1, help="spilt rate of validation set")
-    parser.add_argument('--dataset_split', type=float, default=spilt, help="rate of using labeled data")
+    parser.add_argument('--dataset_split', type=float, default='spilt', help="rate of using labeled data")
 
     args = parser.parse_args()
 

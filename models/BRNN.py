@@ -4,6 +4,7 @@ import torch
 from Metis.utils.utils import *
 
 
+# 这个py文件中写的模型，在整个代码项目中并没有用到！
 class BRNNIntegrateEmptyStateSaperateGRU(nn.Module):
     def __init__(self, pretrained_embed=None, trans_r_1=None, trans_r_2=None, embed_r=None, trans_wildcard=None,
                  config=None, h1=None):

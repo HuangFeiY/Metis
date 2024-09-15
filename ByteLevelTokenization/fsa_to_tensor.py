@@ -6,7 +6,7 @@ from typing import Set, Dict, Optional, List, Callable, Union
 def is_number(token):
     return token.replace('.', '', 1).isdigit()
 
-
+# 标点
 punctuations = {
     ',', '，', ':', '：', '!', '！', '《', '》', '。', '；', '.', '(', ')', '（', '）',
     '|', '?', '"'
@@ -53,12 +53,14 @@ def dfa_to_tensor(automata, word2idx: Dict[str, int], subtype=False, disturb_fun
     punct_idxs = {word: idx for word, idx in word2idx.items() if is_punct(word)}
 
     max_states = len(automata['states'])
+    # 相当于论文中的transition weights，V*K*K
     tensor = np.zeros((len(word2idx), max_states, max_states))
 
     language = set([])
     language.update(number_idxs.keys())
     language.update(punct_idxs.keys())
 
+    # 通配符矩阵
     wildcard_mat = np.zeros((max_states, max_states))
 
     for fr_state, to in sorted(automata['transitions'].items()):
@@ -69,6 +71,8 @@ def dfa_to_tensor(automata, word2idx: Dict[str, int], subtype=False, disturb_fun
                 if (subtype) and ((fr_state in automata['subtypes']) or (
                         to_state in automata['subtypes'])):  # add subtype distortion
                     val = disturb_func(1)
+                    
+                # &%$，这三个punct的具体含义？
 
                 if edge == '&':  # punctuations
                     tensor[list(punct_idxs.values()), state2idx[fr_state], state2idx[to_state]] = val
@@ -77,7 +81,7 @@ def dfa_to_tensor(automata, word2idx: Dict[str, int], subtype=False, disturb_fun
                 elif edge == "$":
                     wildcard_mat[state2idx[fr_state], state2idx[to_state]] = val
                 else:
-
+                    # 矩阵中val的取值要么是1要么是0
                     if edge in word2idx:
                         # print(edge)
                         tensor[word2idx[edge], state2idx[fr_state], state2idx[to_state]] = val
@@ -94,11 +98,17 @@ class Automata:
     """class to represent an Automata"""
 
     def __init__(self, language=set(['0', '1'])):
+        # 状态集，相当于S
         self.states = set()
+        # 初始状态，相当于q_0
         self.startstate = None
+        # 最终状态
         self.finalstates = []
+        # ？？？
         self.finalstates_label = {}
+        # 转换函数
         self.transitions = dict()
+        # language似乎表示字符集
         self.language = language
 
     def to_dict(self):

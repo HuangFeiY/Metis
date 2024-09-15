@@ -257,10 +257,12 @@ def save_args_and_results(args, results, loggers):
 
 
 def train_onehot(args, paths):
+    # 在utils.py中写的日志类，用于输出存储日志
     logger = Logger()
-
+    # 设置GPU设备
     torch.cuda.set_device(args.cuda)
     dset = load_classification_dataset(args)
+    # t2i即wordToIndex，i2t即Index2Word
     t2i, i2t, in2i, i2in = dset['t2i'], dset['i2t'], dset['in2i'], dset['i2in']
 
     query_train, intent_train = dset['query_train'], dset['intent_train']
@@ -276,6 +278,7 @@ def train_onehot(args, paths):
     i2t[len(i2t)] = '<pad>'
     t2i['<pad>'] = len(i2t) - 1
 
+    # 进行pad操作，目的是使每个样本长度相同
     train_query, train_query_inverse, train_lengths = pad_dataset(query_train, args, t2i['<pad>'])
     dev_query, dev_query_inverse, dev_lengths = pad_dataset(query_dev, args, t2i['<pad>'])
     test_query, test_query_inverse, test_lengths = pad_dataset(query_test, args, t2i['<pad>'])
@@ -298,17 +301,20 @@ def train_onehot(args, paths):
     else:
         automata = automata_dicts['automata']
 
+# 这里的dfa_to_tensor()可能是一个比较核心的代码，将状态机转为向量？为啥输入不止有状态机，还包括部分数据集？
     language_tensor, state2idx, wildcard_mat, language = dfa_to_tensor(automata, t2i)
     complete_tensor = language_tensor + wildcard_mat
 
     assert args.additional_state == 0
 
+# create_mat_and_bia可能也是一个比较核心的代码
     mat, bias = create_mat_and_bias(automata, in2i=in2i, i2in=i2in, )
 
     # for padding
     V, S1, S2 = complete_tensor.shape
     complete_tensor_extend = np.concatenate((complete_tensor, np.zeros((1, S1, S2))))
     print(complete_tensor_extend.shape)
+    # 详细模型在这里
     model = IntentIntegrateOnehot(complete_tensor_extend,
                                   config=args,
                                   mat=mat,
@@ -365,6 +371,7 @@ def train_onehot(args, paths):
                 lengths = lengths.cuda()
                 label = label.cuda()
 
+            # x相当于是batch的一部分，参见data.py的第44行和第31行
             scores = model(x, lengths)
 
             loss_cross_entropy = criterion(scores, label)
