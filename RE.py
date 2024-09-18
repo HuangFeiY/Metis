@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_
 import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
-from fsa_to_tensor import dfa_to_tensor
+from ByteLevelTokenization.fsa_to_tensor import dfa_to_tensor
 
 
 def REclassifier(model, intent_dataloader, config=None, i2in=None, is_cuda=True):

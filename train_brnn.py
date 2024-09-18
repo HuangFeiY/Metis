@@ -226,10 +226,10 @@ def get_init_params(config, in2i, i2in, t2i, automata_path):
 
 def save_args_and_results(args, results, loggers):
     print('Saving Args and Results')
-    # mkdir(os.path.dirname(__file__) + '/model/{}-{}'.format(args['dataset'], args['dataset_spilt']))
+    mkdir(os.path.dirname(__file__) + '/result/{}-{}'.format(args['dataset'], args['dataset_spilt']))
     # datetime_str = create_datetime_str()
     if args['model_type'] == 'Onehot':
-        file_save_path = os.path.dirname(__file__) + "/model/{}-{}/{}-{}.res".format(
+        file_save_path = os.path.dirname(__file__) + "/result/{}-{}/{}-{}.res".format(
             args['dataset'], args['dataset_spilt'], args['dataset'], args['dataset_spilt']
         )
         print('Saving Args and Results at: {}'.format(file_save_path))
@@ -260,7 +260,8 @@ def train_onehot(args, paths):
     # 在utils.py中写的日志类，用于输出存储日志
     logger = Logger()
     # 设置GPU设备
-    torch.cuda.set_device(args.cuda)
+    if torch.cuda.is_available():
+        torch.cuda.set_device(args.cuda)
     dset = load_classification_dataset(args)
     # t2i即wordToIndex，i2t即Index2Word
     t2i, i2t, in2i, i2in = dset['t2i'], dset['i2t'], dset['in2i'], dset['i2in']
@@ -345,80 +346,82 @@ def train_onehot(args, paths):
     acc_test_init, avg_loss_test_init, p, r = val(model, intent_dataloader_test, epoch=0, mode='TEST', config=args,
                                                   i2in=i2in, criterion=criterion)
 
-    # pickle.dump(model, open("/home/dgl/zzx/PythonProject/RE2RNN/modelEval/{}.pkl".format(args.dataset), "wb"))
-
+    pickle.dump(model, open("./result/model/{}_origin.pkl".format(args.dataset), "wb"))
+    
     best_dev_acc = acc_dev_init
     counter = 0
     best_dev_test_acc = acc_test_init
+    
+    if args.istrain:
+        print('here')
+        for epoch in range(1, args.epoch + 1):
+            avg_loss = 0
+            acc = 0
+            pbar_train = tqdm(intent_dataloader_train)
+            pbar_train.set_description("TRAIN EPOCH {}".format(epoch))
 
-    for epoch in range(1, args.epoch + 1):
-        avg_loss = 0
-        acc = 0
-        pbar_train = tqdm(intent_dataloader_train)
-        pbar_train.set_description("TRAIN EPOCH {}".format(epoch))
+            model.train()
+            for batch in pbar_train:
 
-        model.train()
-        for batch in pbar_train:
+                optimizer.zero_grad()
 
-            optimizer.zero_grad()
+                x = batch['x']
+                label = batch['i'].view(-1)
+                lengths = batch['l']
 
-            x = batch['x']
-            label = batch['i'].view(-1)
-            lengths = batch['l']
+                if torch.cuda.is_available():
+                    x = x.cuda()
+                    lengths = lengths.cuda()
+                    label = label.cuda()
 
-            if torch.cuda.is_available():
-                x = x.cuda()
-                lengths = lengths.cuda()
-                label = label.cuda()
+                # x相当于是batch的一部分，参见data.py的第44行和第31行
+                scores = model(x, lengths)
 
-            # x相当于是batch的一部分，参见data.py的第44行和第31行
-            scores = model(x, lengths)
+                loss_cross_entropy = criterion(scores, label)
+                loss = loss_cross_entropy
 
-            loss_cross_entropy = criterion(scores, label)
-            loss = loss_cross_entropy
+                loss.backward()
+                optimizer.step()
+                avg_loss += loss.item()
 
-            loss.backward()
-            optimizer.step()
-            avg_loss += loss.item()
+                acc += (scores.argmax(1) == label).sum().item()  # [0, 1] --> 1, [0, 0] --> 0
 
-            acc += (scores.argmax(1) == label).sum().item()  # [0, 1] --> 1, [0, 0] --> 0
+                pbar_train.set_postfix_str("{} - total right: {}, total loss: {}".format('TRAIN', acc, loss))
 
-            pbar_train.set_postfix_str("{} - total right: {}, total loss: {}".format('TRAIN', acc, loss))
+            acc = acc / len(intent_data_train)
+            avg_loss = avg_loss / len(intent_data_train)
 
-        acc = acc / len(intent_data_train)
-        avg_loss = avg_loss / len(intent_data_train)
+            print("{} Epoch: {} | ACC: {}, LOSS: {}".format('TRAIN', epoch, acc, avg_loss))
+            logger.add("{} Epoch: {} | ACC: {}, LOSS: {}".format('TRAIN', epoch, acc, avg_loss))
 
-        print("{} Epoch: {} | ACC: {}, LOSS: {}".format('TRAIN', epoch, acc, avg_loss))
-        logger.add("{} Epoch: {} | ACC: {}, LOSS: {}".format('TRAIN', epoch, acc, avg_loss))
-
-        # DEV
-        acc_dev, avg_loss_dev, p, r = val(model, intent_dataloader_dev, epoch, 'DEV', logger, config=args,
-                                          criterion=criterion)
-        # TEST
-        acc_test, avg_loss_test, p, r = val(model, intent_dataloader_test, epoch, 'TEST', logger, config=args,
+            # DEV
+            acc_dev, avg_loss_dev, p, r = val(model, intent_dataloader_dev, epoch, 'DEV', logger, config=args,
                                             criterion=criterion)
+            # TEST
+            acc_test, avg_loss_test, p, r = val(model, intent_dataloader_test, epoch, 'TEST', logger, config=args,
+                                                criterion=criterion)
 
-        counter += 1  # counter for early stopping
+            counter += 1  # counter for early stopping
 
-        if (acc_dev is None) or (acc_dev > best_dev_acc):
-            counter = 0
-            best_dev_acc = acc_dev
-            best_dev_test_acc = acc_test
+            if (acc_dev is None) or (acc_dev > best_dev_acc):
+                counter = 0
+                best_dev_acc = acc_dev
+                best_dev_test_acc = acc_test
 
-        if counter > args.early_stop:
-            break
+            if counter > args.early_stop:
+                break
 
-    # Save the model
-    # datetime_str = create_datetime_str()
-    model_save_path = os.path.dirname(__file__) + "/model/{}-{}/{}-{}".format(
-        args.dataset, args.dataset_spilt, args.dataset, args.dataset_spilt
-    )
-    model_save_dir = os.path.dirname(__file__) + "/model/{}-{}/".format(args.dataset, args.dataset_spilt)
-    if not os.path.exists(model_save_dir):
-        mkdir(model_save_dir)
-    print("SAVING MODEL {} .....".format(model_save_path))
-    torch.save(model.state_dict(), model_save_path + '.model')
-    torch.save(model, model_save_path + '.m')
+        # Save the model
+        # datetime_str = create_datetime_str()
+        model_save_path = os.path.dirname(__file__) + "/result/model/{}-{}/{}-{}".format(
+            args.dataset, args.dataset_spilt, args.dataset, args.dataset_spilt
+        )
+        model_save_dir = os.path.dirname(__file__) + "/result/model/{}-{}/".format(args.dataset, args.dataset_spilt)
+        if not os.path.exists(model_save_dir):
+            mkdir(model_save_dir)
+        print("SAVING MODEL {} .....".format(model_save_path))
+        torch.save(model.state_dict(), model_save_path + '.model')
+        torch.save(model, model_save_path + '.m')
 
     return acc_dev_init, acc_test_init, best_dev_acc, best_dev_test_acc, logger.record
 

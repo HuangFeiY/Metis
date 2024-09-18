@@ -1,7 +1,7 @@
 import pickle
 import os
 
-dict_dir = "./mydata/snort/scan/automata"
+dict_dir = "./data/snort/chat/automata"
 
 # 从 pkl 文件加载字典
 with open(os.path.join(dict_dir,'all.pkl'), 'rb') as f:

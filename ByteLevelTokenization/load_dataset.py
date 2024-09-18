@@ -4,6 +4,7 @@ import pandas as pd
 from collections import Counter
 from typing import List
 import pickle
+import warnings
 
 import shutil
 
@@ -53,8 +54,9 @@ def create_vocabs(iterable, mode):
 
 
 def load_snort_dataset(args):
+    warnings.filterwarnings("ignore")
     # 原来的csv文件是怎么出来的？
-    file_path = os.path.dirname(__file__) + "/data/snort/{}/{}.csv".format(args.dataset, args.dataset)
+    file_path = os.path.dirname(__file__) + "/../data/snort/{}/{}.csv".format(args.dataset, args.dataset)
     df = pd.read_csv(file_path, header=None).reset_index(drop=True).rename({'0': 'class', '1': 'text'}, axis='columns')
     df.columns = ["class", "text"]
     # print(df.head(3))
@@ -160,12 +162,12 @@ def create_classification_dataset(args):
     }
     print(in2i)
     pickle.dump(dataset, open(
-        os.path.dirname(__file__) + '/data/snort/{}/dataset-{}.pkl'.format(args.dataset, args.dataset_spilt), 'wb'))
+        os.path.dirname(__file__) + '/../data/snort/{}/dataset-{}.pkl'.format(args.dataset, args.dataset_spilt), 'wb'))
     # print(dataset['in2i'])
 
 
 def load_classification_dataset(args):
-    file_path = os.path.dirname(__file__) + '/data/snort/{}/dataset-{}.pkl'.format(args.dataset, args.dataset_spilt)
+    file_path = os.path.dirname(__file__) + '/../data/snort/{}/dataset-{}.pkl'.format(args.dataset, args.dataset_spilt)
     if not os.path.exists(file_path):
         create_classification_dataset(args)
 

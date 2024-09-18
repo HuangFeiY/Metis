@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pickle
 from collections import Counter
-from utils import mkdir, evan_select_from_total_number
+from utils.utils import mkdir, evan_select_from_total_number
 
 class SnortIntentDataset(Dataset):
 

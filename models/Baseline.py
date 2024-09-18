@@ -1,5 +1,5 @@
 import torch.nn as nn
-from net import DAN, CNN
+from models.net import DAN, CNN
 from Metis.utils.utils import *
 import torch
 

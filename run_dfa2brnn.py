@@ -8,6 +8,7 @@ import argparse
 from train_brnn import train_marry_up, train_onehot, save_args_and_results
 from utils.utils import set_seed
 from copy import deepcopy
+import warnings
 
 if __name__ == '__main__':
 
@@ -80,6 +81,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--automata_path_forward', type=str, default='none', help="automata path")
     parser.add_argument('--automata_path_backward', type=str, default='none', help="automata path")
+    
+    # 添加一个表示是否使用数据进行训练的运行参数
+    parser.add_argument('--istrain',action='store_true',help='whether to train the model via dataset')
 
     args = parser.parse_args()
     args_bak = deepcopy(args)
@@ -90,6 +94,10 @@ if __name__ == '__main__':
     seeds = [0]
     results = {}
     loggers = {}
+    # 忽略 SettingWithCopyWarning
+    
+    print('args.istrain:',args.istrain)
+    
     for seed in seeds:
         # assert seed in [0, 1, 2, 3]
         set_seed(seed)
@@ -113,7 +121,7 @@ if __name__ == '__main__':
         # 从这里开始才是BRNN
         elif args.model_type == 'Onehot':
             automata_path_forward = os.path.dirname(
-                __file__) + '/data/snort/{}/automata/all.pkl'.format(args.dataset)
+                __file__) + './data/snort/{}/automata/all.pkl'.format(args.dataset)
             automata_path_backward = ' '
             paths = (automata_path_forward, automata_path_backward)
             args.automata_path_forward = automata_path_forward

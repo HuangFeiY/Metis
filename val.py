@@ -70,6 +70,7 @@ def val(model, intent_dataloader, epoch, mode='DEV', logger=None, config=None, i
     if 'SMS' in config.dataset:
         p_micro = precision_score(all_label, all_pred, average='binary', pos_label=1)
         r_micro = recall_score(all_label, all_pred, average='binary', pos_label=1)
+        
 
     print('Dataset Len: {}'.format(len(intent_dataloader.dataset)))
     print("{} Epoch: {} | ACC: {}, LOSS: {}, P: {}, R: {}".format(mode, epoch, acc, avg_loss, p_micro, r_micro))
@@ -85,7 +86,8 @@ def val(model, intent_dataloader, epoch, mode='DEV', logger=None, config=None, i
         cmap = sns.cubehelix_palette(8, start=2, rot=0, dark=0, light=.95, reverse=False)
         g = sns.heatmap(confusion_mat, annot=True, cmap=cmap, linewidths=1,
                         linecolor='gray', xticklabels=labels, yticklabels=labels, )
-        plt.show()
+        # plt.show()
+        plt.savefig('./result/pic/{}_confusion_matrix_{}.png'.format(config.dataset,mode),dpi=800)
 
     return acc, avg_loss, p_micro, r_micro
 
