@@ -61,6 +61,8 @@ def create_snort_automata(args):
                                                                                       'all_content_automata'))
 
     print('MERGING AUTOMATA')
+    # 由前面的代码可知，automaton字典相当于只有一个automata对象，且key为1，所有label值为1
+    # 这段代码出现的作用是，本项目代码定义的automata类和automata_tools中定义的automata类是不同的，因此需要转换
     for label, automata in automaton.items():
         tok = 'BOS'
         # if reversed:
@@ -78,6 +80,7 @@ def create_snort_automata(args):
                     all_automata.addtransition(states2idx[fr_state], states2idx[to_state], edge)
 
         all_automata.addfinalstates([states2idx[i] for i in final_states])
+        # 所以这里label只为1
         all_automata.addfinalstates_label([states2idx[i] for i in final_states], label)
         state_idx += (num_states)
         # all_automata = DFAtoMinimizedDFA(all_automata)

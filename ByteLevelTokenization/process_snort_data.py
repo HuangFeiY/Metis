@@ -55,6 +55,7 @@ def process_snort(file_name):
 
                 if len(rule) < 4:
                     continue
+                # 前后分别加上$ *的意义是？
                 rule.append('$')
                 rule.append('*')
                 rules[idx] = rule
