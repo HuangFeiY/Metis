@@ -25,7 +25,7 @@ def get_word_to_index(texts: List[List[str]]):
     vocab = Counter()
     for text in texts:
         vocab += Counter(text)
-    vocabList = list(vocab.keys())
+    vocabList = list(vocab.keys())    
     l = len(vocabList)
     indexToWord = {idx: vocab for idx, vocab in enumerate(vocabList)}
     indexToWord[l] = 'BOS'

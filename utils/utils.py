@@ -85,6 +85,20 @@ def pad_dataset_1(query, seq_max_len, pad_idx):
 def mkdir(path):
     if not os.path.exists(path):
         os.mkdir(path)
+        
+def split_wildcard_mat(complete_tensor):
+    V,S,S = complete_tensor.shape
+    wildcard_mat = np.zeros((S,S),dtype=float)
+    for i in range(S):
+        for j in range(S):
+            is_wildcard = True
+            for k in range(V):
+                if complete_tensor[k,i,j] < 1:
+                    is_wildcard = False
+                    break
+            if is_wildcard:
+                wildcard_mat[i,j] = 1
+    return wildcard_mat
 
 
 def create_datetime_str():

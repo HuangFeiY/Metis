@@ -304,7 +304,10 @@ def train_onehot(args, paths):
 
 # 这里的dfa_to_tensor()可能是一个比较核心的代码，将状态机转为向量？为啥输入不止有状态机，还包括部分数据集？
     language_tensor, state2idx, wildcard_mat, language = dfa_to_tensor(automata, t2i)
+    print('language tensor shape:',language_tensor.shape)
+    print('wildcard mat shape:', wildcard_mat.shape)
     complete_tensor = language_tensor + wildcard_mat
+    print('complete tensor shape:', complete_tensor.shape)
 
     assert args.additional_state == 0
 
@@ -314,7 +317,7 @@ def train_onehot(args, paths):
     # for padding
     V, S1, S2 = complete_tensor.shape
     complete_tensor_extend = np.concatenate((complete_tensor, np.zeros((1, S1, S2))))
-    print(complete_tensor_extend.shape)
+    print('complete_tensor_extend.shape:',complete_tensor_extend.shape)
     # 详细模型在这里
     model = IntentIntegrateOnehot(complete_tensor_extend,
                                   config=args,
