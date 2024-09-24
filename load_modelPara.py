@@ -12,21 +12,31 @@ def load_modelPara(model_path):
     mat_tensor=origin_model.mat 
     mat_tensor=mat_tensor.detach().numpy()
     return origin_tensor, mat_tensor
+
+def torchLoad_modelPara(model_path):
+    model=torch.load(model_path)
+    newTensor=model.fsa_rnn.fsa_tensor
+    newTensor=newTensor.detach().numpy()
+    new_mat_tensor=model.mat
+    new_mat_tensor = new_mat_tensor.detach().numpy()
+    return newTensor, new_mat_tensor
     
 
 
 
-# print('mat_tensor:' , mat_tensor)
-# with open('./result/parameter/originModel_para_T.txt', 'w') as f:
-#     for i in range(origin_tensor.shape[0]):
-#         np.savetxt(f, origin_tensor[i], fmt='%.6f')
-#         f.write("\n")  # 在每个切片后添加换行
+if __name__ == '__main__':
+    model_path = './result/model/chat_origin_randInitial.pkl'
+    fsa_tensor, mat_tensor = load_modelPara(model_path)
+    with open('./result/parameter/randInitial_originModel_para_T.txt', 'w') as f:
+        for i in range(fsa_tensor.shape[0]):
+            np.savetxt(f, fsa_tensor[i], fmt='%.6f')
+            f.write("\n")  # 在每个切片后添加换行
 
 
-# model=torch.load('./result/model/chat-1.0/chat-1.0.m')
-# newTensor=model.fsa_rnn.fsa_tensor
-# newTensor=newTensor.detach().numpy()
-# new_mat_tensor=model.mat
+
+
+
+
 # print('new_mat_tensor:', new_mat_tensor)
 # with open('./result/parameter/newModel_para_T.txt', 'w') as f:
 #     for i in range(newTensor.shape[0]):

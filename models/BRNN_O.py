@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class BRNNIntegrateOnehot(nn.Module):
-    def __init__(self, fsa_tensor=None, is_cuda=True):
+    def __init__(self, fsa_tensor=None, is_cuda=True, args=None):
         """
         Parameters
         ----------
@@ -25,7 +25,19 @@ class BRNNIntegrateOnehot(nn.Module):
         #nn.Parameter: 是 PyTorch 中的一个类，用于标记张量是模型的一个参数。
         # nn.Parameter 会自动将其注册到模型的参数列表中，这样在调用优化器进行训练时，这些参数会被优化器管理和更新。
         # 那么状态转移矩阵，将作为模型参数的一部分，会随着模型训练而发生变化！
-        self.fsa_tensor = nn.Parameter(torch.from_numpy(fsa_tensor).float(), requires_grad=True)  # V x S x S
+        if args==None:
+            self.fsa_tensor = nn.Parameter(torch.from_numpy(fsa_tensor).float(), requires_grad=True)  # V x S x S
+        elif args.randInitial:
+            # 生成均值为 0.5，标准差为 1 的正态分布，并将其限制在 (0, 1) 范围内
+            fsa_tensor = torch.normal(mean=0.5, std=1.0, size=(V, S, S))
+            # self.fsa_tensor = nn.Parameter(torch.from_numpy(fsa_tensor).float(), requires_grad=True)  # V x S x S
+            # nn.init.xavier_normal_(self.fsa_tensor)
+            self.fsa_tensor = nn.Parameter(torch.clamp(fsa_tensor, min=0.0, max=1.0), requires_grad=True)
+            # 生成值为 0 或 1 的随机初始化张量
+            # fsa_tensor = torch.randint(0, 2, (V, S, S))  # 生成 0 或 1 的整数张量
+            # self.fsa_tensor = nn.Parameter(fsa_tensor.float(), requires_grad=True)  # 转为 float 并设置为模型参数
+        else:
+            self.fsa_tensor = nn.Parameter(torch.from_numpy(fsa_tensor).float(), requires_grad=True)
 
     def forward(self, input, lengths):
         """
@@ -55,6 +67,13 @@ class BRNNIntegrateOnehot(nn.Module):
             # 爱因斯坦求和约定 ，这里相当于矩阵乘法
             # L个隐藏层向量的迭代
             hidden = torch.einsum('bs,bsj->bj', hidden, Tr)  # B x R, B x R -> B x R
+            
+            
+            # 新加尝试
+            # hidden = torch.nn.functional.softmax(hidden, -1)
+            # 新加的尝试
+            hidden = torch.clamp(hidden, min=-10.0, max=10.0)  # 限制隐藏状态的数值范围
+            
             all_hidden[:, i, :] = hidden
 
         return all_hidden
@@ -99,11 +118,11 @@ class BRNNIntegrateOnehot(nn.Module):
 
 class IntentIntegrateOnehot(nn.Module):
     def __init__(self, fsa_tensor, config=None,
-                 mat=None, bias=None, is_cuda=True):
+                 mat=None, bias=None, is_cuda=True, args=None):
         # 直接写super(nn.Module) 是不正确的，因为 super() 的第一个参数应该是当前类，而不是父类。这样，Python 会沿着从当前类开始的继承链向上寻找合适的父类。
         super(IntentIntegrateOnehot, self).__init__()
 
-        self.fsa_rnn = BRNNIntegrateOnehot(fsa_tensor, is_cuda)
+        self.fsa_rnn = BRNNIntegrateOnehot(fsa_tensor, is_cuda, args)
         self.mat = nn.Parameter(torch.from_numpy(mat).float(), requires_grad=bool(config.train_linear))
         self.bias = nn.Parameter(torch.from_numpy(bias).float(), requires_grad=bool(config.train_linear))
         # 默认为0

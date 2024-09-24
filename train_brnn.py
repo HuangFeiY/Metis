@@ -322,7 +322,8 @@ def train_onehot(args, paths):
     model = IntentIntegrateOnehot(complete_tensor_extend,
                                   config=args,
                                   mat=mat,
-                                  bias=bias)
+                                  bias=bias,
+                                  args=args)
 
     mode = 'onehot'
     if args.loss_type == 'CrossEntropy':
@@ -349,7 +350,7 @@ def train_onehot(args, paths):
     acc_test_init, avg_loss_test_init, p, r = val(model, intent_dataloader_test, epoch=0, mode='TEST', config=args,
                                                   i2in=i2in, criterion=criterion)
 
-    pickle.dump(model, open("./result/model/{}_origin.pkl".format(args.dataset), "wb"))
+    pickle.dump(model, open("./result/model/{}_origin_randInitial.pkl".format(args.dataset), "wb"))
     
     best_dev_acc = acc_dev_init
     counter = 0
@@ -416,7 +417,7 @@ def train_onehot(args, paths):
 
         # Save the model
         # datetime_str = create_datetime_str()
-        model_save_path = os.path.dirname(__file__) + "/result/model/{}-{}/{}-{}".format(
+        model_save_path = os.path.dirname(__file__) + "/result/model/{}-{}/{}-{}_randInitial".format(
             args.dataset, args.dataset_spilt, args.dataset, args.dataset_spilt
         )
         model_save_dir = os.path.dirname(__file__) + "/result/model/{}-{}/".format(args.dataset, args.dataset_spilt)

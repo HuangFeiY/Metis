@@ -84,6 +84,7 @@ if __name__ == '__main__':
     
     # 添加一个表示是否使用数据进行训练的运行参数
     parser.add_argument('--istrain',action='store_true',help='whether to train the model via dataset')
+    parser.add_argument('--randInitial',action='store_true',help='whether to use random initial')
 
     args = parser.parse_args()
     args_bak = deepcopy(args)

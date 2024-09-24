@@ -55,7 +55,8 @@ def val(model, intent_dataloader, epoch, mode='DEV', logger=None, config=None, i
             # print("x: ",x)
             # print("label: ", label)
             # return 0
-
+            # print('out:',out)
+            # print('label: ',label)
             loss = criterion(out, label)
             avg_loss += loss.item()
             acc += (out.argmax(1) == label).sum().item()

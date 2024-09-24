@@ -54,8 +54,8 @@ def dfa_to_tensor(automata, word2idx: Dict[str, int], subtype=False, disturb_fun
 
     max_states = len(automata['states'])
     # 相当于论文中的transition weights，V*K*K
-    print('word2idx:')
-    print(word2idx)
+    # print('word2idx:')
+    # print(word2idx)
     tensor = np.zeros((len(word2idx), max_states, max_states))
 
     language = set([])
